@@ -134,7 +134,7 @@ def main():
         else:
             penalty = 'l2'
         
-        max_iter = st.sidebar.number_input("Max_iter",50,500,step=10,key ='max_iter')
+        max_iter = st.sidebar.number_input("Max_iter (50-500)",50,500,step=10,key ='max_iter')
         
         metrics = st.sidebar.multiselect("What metrics to plot?", ("Confusion Matrix","ROC Curve","Precision-Recall Curve"),key='metrics')
         
