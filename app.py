@@ -16,9 +16,20 @@ def main():
 
     st.title("Binary Classification Streamlit App")
     st.sidebar.title("Binary Classification Streamlit App")
-    st.markdown(" เห็ดนี้กินได้หรือไม่??? 🍄‍🟫🍄‍🟫🍄‍🟫")
-    st.sidebar.markdown(" เห็ดนี้กินได้หรือไม่??? 🍄‍🟫🍄‍🟫🍄‍🟫")
+    st.markdown(" เห็ดนี้แซ่บได้หรือไม่??? 🍄‍🟫🍄‍🟫🍄‍🟫")
+    st.sidebar.markdown(" เห็ดนี้แซ่บได้หรือไม่??? 🍄‍🟫🍄‍🟫🍄‍🟫")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    IMAGE_DIR = os.path.join(BASE_DIR, 'images')
+    image_path = os.path.join(IMAGE_DIR, 'welcome_image.png')
+    if 'popup_shown' not in st.session_state:
+        st.session_state.popup_shown = False
 
+    if not st.session_state.popup_shown:
+        with st.expander("🎉 Welcome! Click to close", expanded=True):
+            st.image(image_path, caption="Welcome to Mushroom Classification App!", width=300)
+            st.write("This app helps you classify mushrooms as edible or poisonous. Enjoy exploring!")
+        st.session_state.popup_shown = True
+    
     ############### Step 2 Load dataset and Preprocessing data ##########
 
     # create read_csv function
@@ -102,22 +113,80 @@ def main():
 
      ############### Step 4 Training a Logistic Regression Classifier ##########
      # Start you Code here #
+    if classifier == 'Logistice Regression':
+        st.subheader("Model hyperparameters")
+        
+        solver_options = {
+            "liblinear (Not recommand)" : "liblinear",
+            "sag (Stochastic Average Gradient)" : "sag",
+            "saga" : "saga",
+            "lbfgs (Limited-memory Broyden-Fletcher-Goldfarb-Shanno)" : "lbfgs"
+        }
+        
+        C = st.sidebar.number_input("C (Inverse Regularization Strength)", 0.01 , 10.0 , step=0.01 , key='C' )
+        # Show radio options with descriptions (Show keys in dictionary )
+        solver_choice = st.sidebar.radio("Solver", list(solver_options.keys()),key = 'solver')
+        # Map (use only string (Value in dictionary ) )
+        solver = solver_options[solver_choice]
+        
+        if solver in ['saga','liblinear']:
+            penalty = st.sidebar.radio("Penalty",("l1","l2"),key='penalty')
+        else:
+            penalty = 'l2'
+        
+        max_iter = st.sidebar.number_input("Max_iter",50,500,step=10,key ='max_iter')
+        
+        metrics = st.sidebar.multiselect("What metrics to plot?", ("Confusion Matrix","ROC Curve","Precision-Recall Curve"),key='metrics')
+        
+        if st.sidebar.button("Classify",key = "classify"):
+            if solver in ['saga','liblinear']:
+                model = LogisticRegression(C=C,solver=solver,max_iter=max_iter,penalty=penalty)
+            else:
+                model = LogisticRegression(C=C,solver=solver,max_iter=max_iter,penalty=penalty)
+            
+            model.fit(x_train,y_train)
+            accuracy = model.score(x_test,y_test)
+            y_pred = model.predict(x_test)
 
-
-
-
-
-
+            precision = precision_score(y_test,y_pred).round(2)
+            recall = recall_score(y_test,y_pred).round(2)
+            
+            st.write("Accuracy: ", round(accuracy,2))
+            st.write("Precision: ", round(precision,2))
+            st.write("Recall: ", round(recall,2))
+            plot_metrics(metrics)
 
      ############### Step 5 Training a Random Forest Classifier ##########
     # Start you Code here #
+    if classifier == 'Random Forest':
+        st.subheader("Model hyperparameters")
+        
+        
+        n_estimators = st.sidebar.number_input("n_estimators (100-400)",100,400,step = 20, key ='n_estimators')
+        max_depth = st.sidebar.number_input("max_depth (3-20)",3,20,step = 1, key ='max_depth')
+        min_samples_split = st.sidebar.number_input("min_samples_split (2-12)",2,12,step = 1, key ='min_samples_split')
+        min_samples_leaf = st.sidebar.number_input("min_samples_leaf (1-5)",1,5,step = 1, key ='min_samples_leaf')
+        max_features = st.sidebar.radio("max_features",("auto","sqrt","log2"), key ='max_features')
+        bootstrap = st.sidebar.radio("bootstrap",(True,False), key ='bootstrap')
+        
+        metrics = st.sidebar.multiselect("What metrics to plot?", ("Confusion Matrix","ROC Curve","Precision-Recall Curve"),key='metrics')
 
+        if st.sidebar.button("Classify",key = "classify"):
+            max_features = None if max_features == "auto" else max_features
+            
+            model = RandomForestClassifier(n_estimators=n_estimators,max_depth=max_depth,min_samples_split=min_samples_split,min_samples_leaf=min_samples_leaf,max_features=max_features,bootstrap=bootstrap)
+            
+            model.fit(x_train,y_train)
+            accuracy = model.score(x_test,y_test)
+            y_pred = model.predict(x_test)
 
-
-
-
-
-
+            precision = precision_score(y_test,y_pred).round(2)
+            recall = recall_score(y_test,y_pred).round(2)
+            
+            st.write("Accuracy: ", round(accuracy,2))
+            st.write("Precision: ", round(precision,2))
+            st.write("Recall: ", round(recall,2))
+            plot_metrics(metrics)
 
     if st.sidebar.checkbox("Show raw data", False):
         st.subheader("Mushroom dataset")
