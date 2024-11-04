@@ -118,7 +118,6 @@ def main():
         
         solver_options = {
             "liblinear (Not recommand)" : "liblinear",
-            "sag (Stochastic Average Gradient)" : "sag",
             "saga" : "saga",
             "lbfgs (Limited-memory Broyden-Fletcher-Goldfarb-Shanno)" : "lbfgs"
         }
